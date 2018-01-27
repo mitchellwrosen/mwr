@@ -1,0 +1,202 @@
+#!/usr/bin/env bash
+
+tool() {
+  if [ -z "$MWR_TOOL" ]; then
+    # Prefer building with cabal, but fall back on stack if we aren't in a
+    # Haskell project (to leverage the "global project").
+    if [ -f cabal.project ]; then
+      echo cabal
+    elif [ -f stack.yaml ]; then
+      echo stack
+    elif ls | grep -q .cabal$; then
+      echo cabal
+    else
+      echo stack
+    fi
+  else
+    echo "$MWR_TOOL"
+  fi
+}
+
+usage() {
+  echo "Usage: mwr COMMAND [ARGS]"
+  echo "Extend available commands with mwr-COMMAND executables"
+  echo ""
+  echo "Available commands:"
+  echo "  bench"
+  echo "  build"
+  echo "  exec"
+  echo "  freeze"
+  echo "  test"
+  echo "  pl"
+  echo "  release"
+  echo "  repl"
+  echo "  run"
+  echo "  unfreeze"
+  echo ""
+  echo "Custom commands:"
+
+  compgen -c | sort | uniq | grep ^mwr- | cut -c5- | xargs -I{} echo "  {}"
+
+  if ! type cabal >/dev/null 2>&1; then
+    echo "Warning: cabal not found"
+  else
+    if [[ $(cabal --version | head -n1) < "cabal-install version 2.1" ]]; then
+      echo "Warning: cabal-install version too low (2.1.0.0+ recommended)"
+    fi
+  fi
+  if ! type stack >/dev/null 2>&1; then
+    echo "Warning: stack not found"
+  fi
+
+  exit 0
+}
+
+if [ -z "$1" ]; then
+  usage
+fi
+
+# GHC opts that we pass no matter what.
+GHCOPTIONS="-fshow-hole-constraints -fprint-expanded-synonyms -fprint-explicit-foralls -fprint-explicit-kinds -fprint-potential-instances -freverse-errors -H16m -Wall -Widentities -Wincomplete-record-updates"
+
+case "$1" in
+  bench)
+    case $(tool) in
+      cabal)
+        cabal new-build \
+          --disable-executable-stripping \
+          --enable-benchmarks \
+          --enable-optimization \
+          --ghc-options="-funbox-strict-fields $GHCOPTIONS" \
+          -j \
+          "${@:2}"
+          ;;
+      stack)
+        stack build \
+          --bench \
+          --ghc-options="-funbox-strict-fields $GHCOPTIONS" \
+          --no-strip \
+          "${@:2}"
+        ;;
+    esac
+    ;;
+  build)
+    case $(tool) in
+      cabal)
+        cabal new-build \
+          --disable-executable-stripping \
+          --disable-optimization \
+          --ghc-options="-fdefer-typed-holes $GHCOPTIONS" \
+          -j \
+          "${@:2}"
+        ;;
+      stack)
+        stack build \
+          --fast \
+          --ghc-options="-fdefer-typed-holes $GHCOPTIONS" \
+          --no-strip \
+          "${@:2}"
+        ;;
+    esac
+    ;;
+  exec)
+    case $(tool) in
+      cabal)
+        cabal new-exec "${@:2}"
+        ;;
+      stack)
+        stack exec "${@:2}"
+        ;;
+    esac
+    ;;
+  freeze)
+    case $(tool) in
+      cabal)
+        cabal new-freeze
+        ;;
+      stack)
+        exit 1
+        ;;
+    esac
+    ;;
+  test)
+    case $(tool) in
+      cabal)
+        cabal new-build \
+          --disable-executable-stripping \
+          --disable-optimization \
+          --enable-tests \
+          --ghc-options="$GHCOPTIONS" \
+          -j \
+          "${@:2}"
+        ;;
+      stack)
+        stack build \
+          --fast \
+          --ghc-options="$GHCOPTIONS" \
+          --no-strip \
+          --test \
+          "${@:2}"
+        ;;
+    esac
+    ;;
+  pl)
+    case $(tool) in
+      cabal)
+        ghcid -c "$0 repl ${@:2}" --restart cabal.project
+        ;;
+      stack)
+        ghcid -c "$0 repl ${@:2}" --restart package.yaml --restart stack.yaml
+        ;;
+    esac
+    ;;
+  release)
+    cabal new-build \
+      --enable-tests \
+      --enable-optimization \
+      --ghc-options="-funbox-strict-fields $GHCOPTIONS" \
+      -j \
+      "${@:2}"
+    ;;
+  repl)
+    case $(tool) in
+      cabal)
+        cabal new-repl \
+          --ghc-options="-fdefer-typed-holes $GHCOPTIONS" \
+          "${@:2}"
+        ;;
+      stack)
+        stack ghci \
+          --ghci-options="-fdefer-typed-holes $GHCOPTIONS" \
+          "${@:2}"
+        ;;
+    esac
+    ;;
+  run)
+    case $(tool) in
+      cabal)
+        cabal new-run "${@:2}"
+        ;;
+      stack)
+        exit 1
+        ;;
+    esac
+    ;;
+  unfreeze)
+    case $(tool) in
+      cabal)
+        rm -f cabal.project.freeze
+        ;;
+      stack)
+        exit 1
+        ;;
+      esac
+    ;;
+  *)
+    if [ -x "mwr-$1" ]; then
+      "mwr-$1" "${@:2}"
+    else
+      usage
+    fi
+    ;;
+esac
