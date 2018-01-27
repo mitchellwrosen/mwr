@@ -66,7 +66,6 @@ case "$1" in
         cabal new-build \
           --disable-executable-stripping \
           --enable-benchmarks \
-          --enable-optimization \
           --ghc-options="$GHCOPTIONS" \
           -j \
           "${@:2}"
@@ -85,9 +84,9 @@ case "$1" in
       cabal)
         cabal new-build \
           --disable-executable-stripping \
-          --disable-optimization \
           --ghc-options="-fdefer-typed-holes $GHCOPTIONS" \
           -j \
+          -O0 \
           "${@:2}"
         ;;
       stack)
@@ -124,10 +123,10 @@ case "$1" in
       cabal)
         cabal new-build \
           --disable-executable-stripping \
-          --disable-optimization \
           --enable-tests \
           --ghc-options="$GHCOPTIONS" \
           -j \
+          -O0 \
           "${@:2}"
         ;;
       stack)
@@ -153,7 +152,6 @@ case "$1" in
   release)
     cabal new-build \
       --enable-tests \
-      --enable-optimization \
       --ghc-options="$GHCOPTIONS" \
       -j \
       "${@:2}"
@@ -163,10 +161,12 @@ case "$1" in
       cabal)
         cabal new-repl \
           --ghc-options="-fdefer-typed-holes $GHCOPTIONS" \
+          -O0 \
           "${@:2}"
         ;;
       stack)
         stack ghci \
+          --fast \
           --ghci-options="-fdefer-typed-holes $GHCOPTIONS" \
           "${@:2}"
         ;;
