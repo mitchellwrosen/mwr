@@ -67,14 +67,14 @@ case "$1" in
           --disable-executable-stripping \
           --enable-benchmarks \
           --enable-optimization \
-          --ghc-options="-funbox-strict-fields $GHCOPTIONS" \
+          --ghc-options="$GHCOPTIONS" \
           -j \
           "${@:2}"
           ;;
       stack)
         stack build \
           --bench \
-          --ghc-options="-funbox-strict-fields $GHCOPTIONS" \
+          --ghc-options="$GHCOPTIONS" \
           --no-strip \
           "${@:2}"
         ;;
@@ -154,7 +154,7 @@ case "$1" in
     cabal new-build \
       --enable-tests \
       --enable-optimization \
-      --ghc-options="-funbox-strict-fields $GHCOPTIONS" \
+      --ghc-options="$GHCOPTIONS" \
       -j \
       "${@:2}"
     ;;
