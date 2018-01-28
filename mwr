@@ -146,7 +146,7 @@ case "$1" in
   pl)
     case $(tool) in
       cabal)
-        ghcid -c "$0 repl ${*:2}" --restart cabal.project
+        ghcid -c "$0 repl ${*:2}" --restart cabal.project --restart *.cabal
         ;;
       stack)
         ghcid -c "$0 repl ${*:2}" --restart package.yaml --restart stack.yaml
