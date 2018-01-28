@@ -59,6 +59,9 @@ fi
 # GHC opts that we pass no matter what.
 GHCOPTIONS="-fshow-hole-constraints -fprint-expanded-synonyms -fprint-explicit-foralls -fprint-explicit-kinds -fprint-potential-instances -freverse-errors -H16m -Wall -Widentities -Wincomplete-record-updates"
 
+# Note: we disable -fdefer-typed-holes below temporarily due to
+# https://ghc.haskell.org/trac/ghc/ticket/14732
+
 case "$1" in
   bench)
     case $(tool) in
@@ -79,12 +82,13 @@ case "$1" in
         ;;
     esac
     ;;
+  # -fdefer-typed-holes
   build)
     case $(tool) in
       cabal)
         cabal new-build \
           --disable-executable-stripping \
-          --ghc-options="-fdefer-typed-holes $GHCOPTIONS" \
+          --ghc-options="$GHCOPTIONS" \
           -j \
           -O0 \
           "${@:2}"
@@ -92,7 +96,7 @@ case "$1" in
       stack)
         stack build \
           --fast \
-          --ghc-options="-fdefer-typed-holes $GHCOPTIONS" \
+          --ghc-options="$GHCOPTIONS" \
           --no-strip \
           "${@:2}"
         ;;
@@ -156,18 +160,19 @@ case "$1" in
       -j \
       "${@:2}"
     ;;
+  # -fdefer-typed-holes
   repl)
     case $(tool) in
       cabal)
         cabal new-repl \
-          --ghc-options="-fdefer-typed-holes $GHCOPTIONS" \
+          --ghc-options="$GHCOPTIONS" \
           -O0 \
           "${@:2}"
         ;;
       stack)
         stack ghci \
           --fast \
-          --ghci-options="-fdefer-typed-holes $GHCOPTIONS" \
+          --ghc-options="$GHCOPTIONS" \
           "${@:2}"
         ;;
     esac
