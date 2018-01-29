@@ -23,20 +23,21 @@ usage() {
   echo "Extend available commands with mwr-COMMAND executables"
   echo ""
   echo "Available commands:"
-  echo "  bench"
-  echo "  build"
-  echo "  exec"
-  echo "  freeze"
-  echo "  test"
-  echo "  pl"
-  echo "  release"
-  echo "  repl"
-  echo "  run"
-  echo "  unfreeze"
+  echo "  bench     Run all benchmarks."
+  echo "  build     Build all components."
+  echo "  dev       Quickly rebuild modules that are modified."
+  echo "  dev-run   Quickly rebuild modules that are modified, then run 'main'."
+  echo "  exec      Run a shell command."
+  echo "  freeze    Freeze dependencies."
+  echo "  test      Run all test suites."
+  echo "  release   Build all components with optimization enabled."
+  echo "  repl      Launch a REPL."
+  echo "  run       Run a project executable."
+  echo "  unfreeze  Delete frozen dependencies."
   echo ""
   echo "Custom commands:"
 
-  compgen -c | sort | uniq | grep ^mwr- | cut -c5- | xargs -I{} echo "  {}"
+  compgen -c | grep ^mwr- | sort | uniq | cut -c5- | xargs -I{} echo "  {}"
 
   if ! type cabal >/dev/null 2>&1; then
     echo "Warning: cabal not found"
@@ -66,7 +67,7 @@ case "$1" in
   bench)
     case $(tool) in
       cabal)
-        cabal new-build --disable-executable-stripping --enable-benchmarks --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j "${@:2}"
+        cabal new-bench --disable-executable-stripping --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j "${@:2}"
         ;;
       stack)
         stack build --bench --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" --no-strip "${@:2}"
@@ -77,10 +78,40 @@ case "$1" in
   build)
     case $(tool) in
       cabal)
-        cabal new-build --disable-executable-stripping --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j -O0 "${@:2}"
+        cabal new-build --disable-executable-stripping --enable-benchmarks --enable-tests --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j -O0 "${@:2}"
         ;;
       stack)
         stack build --fast --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" --no-strip "${@:2}"
+        ;;
+    esac
+    ;;
+  dev)
+    case $(tool) in
+      cabal)
+        ghcid -c "cabal new-repl -O0 --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart cabal.project --restart *.cabal
+        ;;
+      stack)
+        ghcid -c "stack ghci --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart package.yaml --restart stack.yaml
+        ;;
+    esac
+    ;;
+  dev-run)
+    case $(tool) in
+      cabal)
+        ghcid -c "cabal new-repl -O0 --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart cabal.project --restart *.cabal -T ":main" -W
+        ;;
+      stack)
+        ghcid -c "stack ghci --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart package.yaml --restart stack.yaml -T ":main" -W
+        ;;
+    esac
+    ;;
+  release)
+    case $(tool) in
+      cabal)
+        cabal new-build --enable-benchmarks --enable-tests --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j "${@:2}"
+        ;;
+      stack)
+        exit 1
         ;;
     esac
     ;;
@@ -113,19 +144,6 @@ case "$1" in
         stack build --fast --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" --no-strip --test "${@:2}"
         ;;
     esac
-    ;;
-  pl)
-    case $(tool) in
-      cabal)
-        ghcid -c "cabal new-repl -O0 --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart cabal.project --restart *.cabal
-        ;;
-      stack)
-        ghcid -c "stack ghci --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart package.yaml --restart stack.yaml
-        ;;
-    esac
-    ;;
-  release)
-    cabal new-build --enable-tests --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j "${@:2}"
     ;;
   # -fdefer-typed-holes
   repl)
