@@ -57,7 +57,7 @@ if [ -z "$1" ]; then
 fi
 
 # GHC opts that we pass no matter what.
-GHCOPTIONS="-fshow-hole-constraints -fprint-expanded-synonyms -fprint-explicit-foralls -fprint-explicit-kinds -fprint-potential-instances -freverse-errors -H16m -Wall -Widentities -Wincomplete-record-updates"
+GHCOPTIONS="-fshow-hole-constraints -fprint-expanded-synonyms -fprint-explicit-foralls -fprint-explicit-kinds -fprint-potential-instances -H16m"
 
 # Note: we disable -fdefer-typed-holes below temporarily due to
 # https://ghc.haskell.org/trac/ghc/ticket/14732
@@ -66,19 +66,10 @@ case "$1" in
   bench)
     case $(tool) in
       cabal)
-        cabal new-build \
-          --disable-executable-stripping \
-          --enable-benchmarks \
-          --ghc-options="$GHCOPTIONS" \
-          -j \
-          "${@:2}"
-          ;;
+        cabal new-build --disable-executable-stripping --enable-benchmarks --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j "${@:2}"
+        ;;
       stack)
-        stack build \
-          --bench \
-          --ghc-options="$GHCOPTIONS" \
-          --no-strip \
-          "${@:2}"
+        stack build --bench --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" --no-strip "${@:2}"
         ;;
     esac
     ;;
@@ -86,19 +77,10 @@ case "$1" in
   build)
     case $(tool) in
       cabal)
-        cabal new-build \
-          --disable-executable-stripping \
-          --ghc-options="$GHCOPTIONS" \
-          -j \
-          -O0 \
-          "${@:2}"
+        cabal new-build --disable-executable-stripping --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j -O0 "${@:2}"
         ;;
       stack)
-        stack build \
-          --fast \
-          --ghc-options="$GHCOPTIONS" \
-          --no-strip \
-          "${@:2}"
+        stack build --fast --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" --no-strip "${@:2}"
         ;;
     esac
     ;;
@@ -125,55 +107,34 @@ case "$1" in
   test)
     case $(tool) in
       cabal)
-        cabal new-build \
-          --disable-executable-stripping \
-          --enable-tests \
-          --ghc-options="$GHCOPTIONS" \
-          -j \
-          -O0 \
-          "${@:2}"
+        cabal new-test --disable-executable-stripping --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j -O0 "${@:2}"
         ;;
       stack)
-        stack build \
-          --fast \
-          --ghc-options="$GHCOPTIONS" \
-          --no-strip \
-          --test \
-          "${@:2}"
+        stack build --fast --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" --no-strip --test "${@:2}"
         ;;
     esac
     ;;
   pl)
     case $(tool) in
       cabal)
-        ghcid -c "$0 repl ${*:2}" --restart cabal.project --restart *.cabal
+        ghcid -c "cabal new-repl -O0 --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart cabal.project --restart *.cabal
         ;;
       stack)
-        ghcid -c "$0 repl ${*:2}" --restart package.yaml --restart stack.yaml
+        ghcid -c "stack ghci --fast --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart package.yaml --restart stack.yaml
         ;;
     esac
     ;;
   release)
-    cabal new-build \
-      --enable-tests \
-      --ghc-options="$GHCOPTIONS" \
-      -j \
-      "${@:2}"
+    cabal new-build --enable-tests --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j "${@:2}"
     ;;
   # -fdefer-typed-holes
   repl)
     case $(tool) in
       cabal)
-        cabal new-repl \
-          --ghc-options="$GHCOPTIONS" \
-          -O0 \
-          "${@:2}"
+        cabal new-repl --ghc-options="-w $GHCOPTIONS" -O0 "${@:2}"
         ;;
       stack)
-        stack ghci \
-          --fast \
-          --ghc-options="$GHCOPTIONS" \
-          "${@:2}"
+        stack ghci --fast --ghc-options="-w $GHCOPTIONS" "${@:2}"
         ;;
     esac
     ;;
