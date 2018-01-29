@@ -120,7 +120,7 @@ case "$1" in
         ghcid -c "cabal new-repl -O0 --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart cabal.project --restart *.cabal
         ;;
       stack)
-        ghcid -c "stack ghci --fast --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart package.yaml --restart stack.yaml
+        ghcid -c "stack ghci --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart package.yaml --restart stack.yaml
         ;;
     esac
     ;;
