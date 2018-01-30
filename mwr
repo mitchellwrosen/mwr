@@ -58,7 +58,8 @@ if [ -z "$1" ]; then
 fi
 
 # GHC opts that we pass no matter what.
-GHCOPTIONS="-fshow-hole-constraints -fprint-expanded-synonyms -fprint-explicit-foralls -fprint-explicit-kinds -fprint-potential-instances -H16m"
+# TODO: Add fshow-hole-constraints for 8.2+
+GHCOPTIONS="-fprint-expanded-synonyms -fprint-explicit-foralls -fprint-explicit-kinds -fprint-potential-instances -H16m"
 
 # Note: we disable -fdefer-typed-holes below temporarily due to
 # https://ghc.haskell.org/trac/ghc/ticket/14732
