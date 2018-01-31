@@ -92,7 +92,11 @@ case "$1" in
         ghcid -c "cabal new-repl -O0 --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart cabal.project --restart *.cabal
         ;;
       stack)
-        ghcid -c "stack ghci --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart package.yaml --restart stack.yaml
+        # Can't pass more than one option because of
+        # https://github.com/commercialhaskell/stack/issues/3315
+        # stack ghci --ghc-options="-w $GHCOPTIONS" "${@:2}"
+        # ghcid -c "stack ghci --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart package.yaml --restart stack.yaml
+        ghcid -c "stack ghci --ghc-options=\"-Wall\" ${*:2}" --restart package.yaml --restart stack.yaml
         ;;
     esac
     ;;
@@ -102,7 +106,11 @@ case "$1" in
         ghcid -c "cabal new-repl -O0 --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart cabal.project --restart *.cabal -T ":main" -W
         ;;
       stack)
-        ghcid -c "stack ghci --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart package.yaml --restart stack.yaml -T ":main" -W
+        # Can't pass more than one option because of
+        # https://github.com/commercialhaskell/stack/issues/3315
+        # stack ghci --ghc-options="-w $GHCOPTIONS" "${@:2}"
+        # ghcid -c "stack ghci --ghc-options=\"-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS\" ${*:2}" --restart package.yaml --restart stack.yaml -T ":main" -W
+        ghcid -c "stack ghci --ghc-options=\"-Wall\" ${*:2}" --restart package.yaml --restart stack.yaml -T ":main" -W
         ;;
     esac
     ;;
@@ -153,7 +161,10 @@ case "$1" in
         cabal new-repl --ghc-options="-w $GHCOPTIONS" -O0 "${@:2}"
         ;;
       stack)
-        stack ghci --fast --ghc-options="-w $GHCOPTIONS" "${@:2}"
+        # Can't pass more than one option because of
+        # https://github.com/commercialhaskell/stack/issues/3315
+        # stack ghci --ghc-options="-w $GHCOPTIONS" "${@:2}"
+        stack ghci --ghc-options="-w" "${@:2}"
         ;;
     esac
     ;;
