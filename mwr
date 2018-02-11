@@ -158,7 +158,7 @@ case "$1" in
   repl)
     case $(tool) in
       cabal)
-        cabal new-repl --ghc-options="-w $GHCOPTIONS" -O0 "${@:2}"
+        cabal new-repl --ghc-options="-Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -O0 "${@:2}"
         ;;
       stack)
         # Can't pass more than one option because of
@@ -171,7 +171,7 @@ case "$1" in
   run)
     case $(tool) in
       cabal)
-        cabal new-run "${@:2}"
+        cabal new-run --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j -O0 "${@:2}"
         ;;
       stack)
         exit 1
