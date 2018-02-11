@@ -79,7 +79,7 @@ case "$1" in
   build)
     case $(tool) in
       cabal)
-        cabal new-build --disable-executable-stripping --enable-benchmarks --enable-tests --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j -O0 "${@:2}"
+        cabal new-build --disable-executable-stripping --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" -j -O0 "${@:2}"
         ;;
       stack)
         stack build --fast --ghc-options="-freverse-errors -Wall -Widentities -Wincomplete-record-updates $GHCOPTIONS" --no-strip "${@:2}"
